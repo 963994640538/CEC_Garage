@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - كراج نادي الفروسية المركزي</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2D5016">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="كراج الفروسية">
+    <link rel="apple-touch-icon" href="assets/icon.svg">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2D5016',
+                        primaryLight: '#3A6B20',
+                        secondary: '#A67C52',
+                        secondaryLight: '#B8936A',
+                        accent: '#E63946',
+                        accentLight: '#F0545F',
+                        background: '#F5F1E8',
+                        surface: 'rgba(255,255,255,0.82)',
+                        textMain: '#3D3D3D',
+                        textMuted: '#6B6B6B',
+                        muted: '#8B9B7A',
+                        gold: '#C9A84C',
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        tajawal: ['Tajawal', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.4s ease-out',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'pulse-gold': 'pulseGold 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateX(20px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' }
+                        },
+                        pulseGold: {
+                            '0%,100%': { boxShadow: '0 0 0 0 rgba(201,168,76,0.4)' },
+                            '50%': { boxShadow: '0 0 0 12px rgba(201,168,76,0)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #2D5016 0%, #1a3009 50%, #3D3D3D 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-dark {
+            background: rgba(45, 80, 22, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(201, 168, 76, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateX(20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+
+<body class="font-cairo">
+
+    <!-- Audio Effects -->
+    <audio id="sound-success" src="assets/save.wav" preload="auto"></audio>
+    <audio id="sound-error" src="assets/clic.wav" preload="auto"></audio>
+
+    <!-- ==================== LOGIN FORM ==================== -->
+    <div class="min-h-screen flex items-center justify-center px-4 py-8">
+        <div class="glass rounded-3xl max-w-md w-full p-8 animate-fade-in shadow-2xl">
+
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <img src="https://www.image2url.com/r2/default/images/1777193694982-0955eb59-0903-4510-ac64-e437d393f4b2.jpg"
+                     alt="شعار النادي" class="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-gold shadow-lg">
+                <h1 class="text-3xl font-bold text-white font-tajawal mb-1">كراج الفروسية</h1>
+                <p class="text-gray-200 text-sm">كراج نادي الفروسية المركزي</p>
+            </div>
+
+            <!-- Divider -->
+            <div class="w-16 h-1 bg-gradient-to-l from-gold to-primary rounded-full mx-auto mb-6"></div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4">
+
+                <!-- Username/Phone -->
+                <div>
+                    <label class="block text-white/90 text-sm font-semibold mb-2">اسم المستخدم</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gold text-lg"></i>
+                        <input type="text" id="username" placeholder="أدخل اسم المستخدم أو رقم الهاتف"
+                               class="w-full pl-12 pr-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-gold focus:outline-none focus:bg-white/15 transition-all text-right"
+                               required>
+                    </div>
+                    <p id="username-error" class="text-red-400 text-xs mt-1 hidden"></p>
+                </div>
+
+                <!-- PIN -->
+                <div>
+                    <label class="block text-white/90 text-sm font-semibold mb-2">رمز المرور (PIN)</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gold text-lg"></i>
+                        <input type="password" id="pin" placeholder="أدخل رمز المرور"
+                               class="w-full pl-12 pr-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-gold focus:outline-none focus:bg-white/15 transition-all text-right"
+                               maxlength="6" required>
+                    </div>
+                    <p id="pin-error" class="text-red-400 text-xs mt-1 hidden"></p>
+                </div>
+
+                <!-- Remember Me -->
+                <label class="flex items-center gap-2 text-white/80 text-sm cursor-pointer hover:text-white transition-colors">
+                    <input type="checkbox" id="remember" class="w-4 h-4 rounded accent-gold cursor-pointer">
+                    <span>تذكر بيانات الدخول</span>
+                </label>
+
+                <!-- Login Button -->
+                <button type="submit" id="login-btn"
+                        class="w-full py-3 mt-6 rounded-lg bg-gradient-to-r from-gold to-secondary text-white font-bold text-lg hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                </button>
+
+            </form>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-3 my-6">
+                <div class="flex-1 h-px bg-white/20"></div>
+                <span class="text-white/60 text-xs">أو</span>
+                <div class="flex-1 h-px bg-white/20"></div>
+            </div>
+
+            <!-- Help Links -->
+            <div class="space-y-2">
+                <button onclick="openResetModal()" type="button"
+                        class="w-full py-2 px-4 rounded-lg bg-white/5 border border-white/20 text-white/80 text-sm hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-key"></i> نسيت رمز المرور؟
+                </button>
+                <button onclick="openHelpModal()" type="button"
+                        class="w-full py-2 px-4 rounded-lg bg-white/5 border border-white/20 text-white/80 text-sm hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-question-circle"></i> المساعدة
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center mt-6 text-white/60 text-xs">
+                <p>© 2026 كراج نادي الفروسية المركزي</p>
+                <p>جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== RESET PIN MODAL ==================== -->
+    <div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);">
+        <div class="glass rounded-2xl max-w-sm w-full p-6 animate-fade-in shadow-2xl">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-key text-gold text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">إعادة تعيين رمز المرور</h3>
+                <p class="text-gray-300 text-sm">سنرسل لك تعليمات عبر البريد الإلكتروني أو الهاتف</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-white/90 text-sm font-semibold mb-2">اسم المستخدم أو البريد الإلكتروني</label>
+                    <input type="text" id="reset-email" placeholder="أدخل بيانات الاتصال"
+                           class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-gold focus:outline-none focus:bg-white/15 transition-all text-right">
+                </div>
+                <button onclick="submitResetRequest()" class="w-full py-3 rounded-lg bg-gradient-to-r from-gold to-secondary text-white font-bold hover:shadow-lg transition-all">
+                    <i class="fas fa-envelope ml-2"></i> إرسال تعليمات الاستعادة
+                </button>
+                <button onclick="closeResetModal()" type="button" class="w-full py-3 rounded-lg bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== HELP MODAL ==================== -->
+    <div id="help-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);">
+        <div class="glass rounded-2xl max-w-md w-full p-6 animate-fade-in shadow-2xl max-h-[80vh] overflow-y-auto">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-info-circle text-blue-400 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-1">المساعدة والدعم</h3>
+            </div>
+            <div class="space-y-4 text-white/90 text-sm">
+                <div class="bg-white/5 rounded-lg p-3">
+                    <h4 class="font-bold text-gold mb-1">كيفية تسجيل الدخول؟</h4>
+                    <p>استخدم اسم المستخدم أو رقم الهاتف مع رمز المرور المكون من 6 أرقام.</p>
+                </div>
+                <div class="bg-white/5 rounded-lg p-3">
+                    <h4 class="font-bold text-gold mb-1">هل نسيت رمز المرور؟</h4>
+                    <p>اضغط على "نسيت رمز المرور" وسنرسل لك تعليمات الاستعادة.</p>
+                </div>
+                <div class="bg-white/5 rounded-lg p-3">
+                    <h4 class="font-bold text-gold mb-1">التواصل مع الدعم الفني</h4>
+                    <a href="https://wa.me/96399460538" target="_blank" class="flex items-center hover:text-gold transition-colors cursor-pointer">
+                        <i class="fas fa-phone text-secondary ml-1"></i> <span>+963 99460538</span>
+                    </a>
+                    <p><i class="fas fa-envelope text-secondary ml-1"></i> ahmadalsaleh03@outlook.com</p>
+                </div>
+            </div>
+            <button onclick="closeHelpModal()" type="button" class="w-full py-3 rounded-lg bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all mt-4">
+                إغلاق
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST NOTIFICATION ==================== -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden">
+        <div class="glass-dark text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-slide-in">
+            <i id="toast-icon" class="fas fa-check-circle text-green-400"></i>
+            <span id="toast-message" class="font-semibold">تم بنجاح</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/users.js"></script>
+    <script>
+        // ==================== LOGIN LOGIC ====================
+        const loginForm = document.getElementById('login-form');
+        const usernameInput = document.getElementById('username');
+        const pinInput = document.getElementById('pin');
+        const rememberCheckbox = document.getElementById('remember');
+
+        // Load saved credentials
+        let userManagementReady = false;
+        
+        window.addEventListener('load', () => {
+            loadUserManagement(); // تحميل بيانات الموظفين
+            userManagementReady = true;
+            
+            if (localStorage.getItem('remembered-user')) {
+                usernameInput.value = localStorage.getItem('remembered-user');
+                rememberCheckbox.checked = true;
+                pinInput.focus();
+            }
+        });
+        
+        // Ensure users are loaded even if page doesn't fully load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!userManagementReady) {
+                loadUserManagement();
+                userManagementReady = true;
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            const username = usernameInput.value.trim();
+            const pin = pinInput.value.trim();
+
+            // Validation
+            if (!username) {
+                showError('username-error', 'أدخل اسم المستخدم');
+                return;
+            }
+
+            if (!pin || pin.length !== 6) {
+                showError('pin-error', 'رمز المرور يجب أن يكون 6 أرقام');
+                return;
+            }
+
+            if (!/^\d+$/.test(pin)) {
+                showError('pin-error', 'رمز المرور يجب أن يحتوي على أرقام فقط');
+                return;
+            }
+
+            // Authenticate user
+            await authenticateLogin(username, pin);
+        });
+
+        async function authenticateLogin(username, pin) {
+            const loginBtn = document.getElementById('login-btn');
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
+
+            try {
+                // Ensure user management is loaded
+                if (!userManagementReady) {
+                    loadUserManagement();
+                    userManagementReady = true;
+                }
+                
+                // Simulate server delay
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Check credentials using the new user management system
+                if (authenticateUser(username, pin)) {
+                    // Success
+                    playSound('sound-success');
+                    const user = getCurrentUser();
+                    showToast(`مرحباً ${user.name}!`, 'success');
+
+                    if (rememberCheckbox.checked) {
+                        localStorage.setItem('remembered-user', username);
+                    } else {
+                        localStorage.removeItem('remembered-user');
+                    }
+
+                    // Save authentication status
+                    sessionStorage.setItem('is-authenticated', 'true');
+                    localStorage.setItem('auth-token', 'user-' + Date.now());
+
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    playSound('sound-error');
+                    loginBtn.classList.add('shake');
+                    setTimeout(() => loginBtn.classList.remove('shake'), 500);
+                    showError('pin-error', 'بيانات الدخول غير صحيحة');
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                showError('pin-error', 'حدث خطأ في الاتصال: ' + error.message);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+            }
+        }
+
+        // ==================== UI HELPERS ====================
+        function clearErrors() {
+            const usernameError = document.getElementById('username-error');
+            const pinError = document.getElementById('pin-error');
+            
+            if (usernameError) usernameError.classList.add('hidden');
+            if (pinError) pinError.classList.add('hidden');
+        }
+
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.classList.remove('hidden');
+            } else {
+                console.warn('⚠️ Error element not found:', elementId);
+                alert(message); // Fallback to alert
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+
+            // Fallback if toast elements don't exist
+            if (!toast || !icon || !msg) {
+                console.warn('⚠️ Toast elements not found');
+                alert(message);
+                return;
+            }
+
+            msg.textContent = message;
+            icon.className = type === 'success' ? 'fas fa-check-circle text-green-400' : 'fas fa-exclamation-circle text-red-400';
+
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function playSound(audioId) {
+            const audio = document.getElementById(audioId);
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(() => {});
+            }
+        }
+
+
+
+        // ==================== MODAL FUNCTIONS ====================
+        function openResetModal() {
+            const modal = document.getElementById('reset-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeResetModal() {
+            const modal = document.getElementById('reset-modal');
+            const emailInput = document.getElementById('reset-email');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            if (emailInput) emailInput.value = '';
+        }
+
+        function openHelpModal() {
+            const modal = document.getElementById('help-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeHelpModal() {
+            const modal = document.getElementById('help-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function submitResetRequest() {
+            const emailInput = document.getElementById('reset-email');
+            if (!emailInput) {
+                console.warn('⚠️ Reset email input not found');
+                return;
+            }
+            
+            const email = emailInput.value.trim();
+            if (!email) {
+                showToast('أدخل اسم المستخدم أو البريد الإلكتروني', 'error');
+                return;
+            }
+
+            playSound('sound-success');
+            showToast('تم إرسال تعليمات الاستعادة. تحقق من بريدك الإلكتروني');
+            closeResetModal();
+        }
+
+        // Close modals on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeResetModal();
+                closeHelpModal();
+            }
+        });
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(r => console.log('SW registered:', r.scope))
+                    .catch(e => console.log('SW registration failed:', e));
+            });
+        }
+    </script>
+
+</body>
+</html>

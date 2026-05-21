@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كراج نادي الفروسية المركزي</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2D5016">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="كراج الفروسية">
+    <link rel="apple-touch-icon" href="assets/icon.svg">
+    <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2D5016', primaryLight: '#3A6B20',
+                        secondary: '#A67C52', secondaryLight: '#B8936A',
+                        accent: '#E63946', accentLight: '#F0545F',
+                        background: '#F5F1E8', surface: 'rgba(255,255,255,0.82)',
+                        textMain: '#3D3D3D', textMuted: '#6B6B6B',
+                        muted: '#8B9B7A', gold: '#C9A84C', goldLight: '#D9BC6A',
+                        success: '#10B981', warning: '#F59E0B', info: '#3B82F6',
+                    },
+                    fontFamily: { cairo: ['Cairo','sans-serif'], tajawal: ['Tajawal','sans-serif'] },
+                    animation: {
+                        'pulse-gold': 'pulseGold 2s ease-in-out infinite',
+                        'scan-line': 'scanLine 2s linear infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'fade-in': 'fadeIn 0.4s ease-out',
+                        'bounce-soft': 'bounceSoft 2s ease-in-out infinite',
+                        'shimmer': 'shimmer 2s linear infinite',
+                    },
+                    keyframes: {
+                        pulseGold: { '0%,100%': {boxShadow:'0 0 0 0 rgba(201,168,76,0.4)'}, '50%': {boxShadow:'0 0 0 12px rgba(201,168,76,0)'}},
+                        scanLine: { '0%': {top:'0%'}, '100%': {top:'100%'}},
+                        float: { '0%,100%': {transform:'translateY(0px)'}, '50%': {transform:'translateY(-8px)'}},
+                        slideIn: { '0%': {transform:'translateX(20px)',opacity:'0'}, '100%': {transform:'translateX(0)',opacity:'1'}},
+                        fadeIn: { '0%': {opacity:'0',transform:'translateY(10px)'}, '100%': {opacity:'1',transform:'translateY(0)'}},
+                        bounceSoft: { '0%,100%': {transform:'translateY(0)'}, '50%': {transform:'translateY(-5px)'}},
+                        shimmer: { '0%': {backgroundPosition:'-200% 0'}, '100%': {backgroundPosition:'200% 0'}},
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- App Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Third-party libraries -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body class="font-cairo text-textMain">
+
+    <!-- Audio -->
+    <audio id="sound-click" src="assets/clic.wav" preload="auto"></audio>
+    <audio id="sound-save"  src="assets/save.wav" preload="auto"></audio>
+
+    <!-- ==================== SETUP MODAL ==================== -->
+    <div id="setup-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fade-in">
+            <div class="bg-gradient-to-r from-primary to-primaryLight p-6 rounded-t-3xl text-white">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-cloud text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold font-tajawal">ربط النظام بجوجل شيت</h2>
+                        <p class="text-white/80 text-sm">خطوات الإعداد - تستغرق 3 دقائق فقط</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- Step 1 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span class="text-primary font-bold">1</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-primary mb-2">إنشاء جدول جوجل شيت جديد</h3>
+                        <p class="text-sm text-textMuted mb-3">اذهب إلى <a href="https://sheets.new" target="_blank" class="text-primary underline">sheets.new</a> لإنشاء شيت جديد</p>
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                            <p class="text-xs text-muted mb-2">أعد تسمية الأوراق إلى:</p>
+                            <div class="flex gap-2 flex-wrap">
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-sm font-bold">Sessions</span>
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-sm font-bold">Cards</span>
+                                <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-lg text-sm font-bold">Settings</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Step 2 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 bg-gold/20 rounded-full flex items-center justify-center">
+                        <span class="text-gold font-bold">2</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gold mb-2">فتح محرر Apps Script</h3>
+                        <p class="text-sm text-textMuted mb-3">من القائمة: <span class="bg-gray-100 px-2 py-0.5 rounded text-xs font-bold">Extensions → Apps Script</span></p>
+                        <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto">
+                            <p class="text-xs text-muted mb-2">الصق هذا الكود في المحرر:</p>
+                            <pre id="apps-script-code" class="text-xs text-green-400 whitespace-pre-wrap font-mono leading-relaxed"></pre>
+                            <button onclick="copyAppsScript()" class="mt-3 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primaryLight transition-all">
+                                <i class="fas fa-copy ml-1"></i> نسخ الكود
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Step 3 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
+                        <span class="text-secondary font-bold">3</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-secondary mb-2">نشر التطبيق كـ Web App</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 text-sm"><span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span><span>اضغط <span class="bg-gray-100 px-2 py-0.5 rounded text-xs font-bold">Deploy → New deployment</span></span></div>
+                            <div class="flex items-center gap-2 text-sm"><span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span><span>اختر النوع: <span class="bg-gray-100 px-2 py-0.5 rounded text-xs font-bold">Web App</span></span></div>
+                            <div class="flex items-center gap-2 text-sm"><span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">3</span><span>Execute as: <span class="bg-gray-100 px-2 py-0.5 rounded text-xs font-bold">Me</span></span></div>
+                            <div class="flex items-center gap-2 text-sm"><span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">4</span><span>Who has access: <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">Anyone</span></span></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Step 4 -->
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
+                        <span class="text-accent font-bold">4</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-accent mb-2">لصق رابط Web App هنا</h3>
+                        <div class="flex gap-2 flex-col sm:flex-row">
+                            <input type="url" id="web-app-url" placeholder="https://script.google.com/macros/s/..."
+                                   class="flex-1 px-4 py-3 rounded-xl border-2 border-secondary/30 focus:border-gold focus:outline-none bg-white/80 text-sm dir-ltr">
+                            <button onclick="copyWebAppUrl()" class="btn-secondary px-4 py-3 rounded-xl text-sm font-semibold">
+                                <i class="fas fa-link ml-2"></i> نسخ رابط المشاركة
+                            </button>
+                        </div>
+                        <p class="text-xs text-muted mt-2">انسخ هذا الرابط وأرسله للموظفين ليستخدموا نفس البيانات.</p>
+                    </div>
+                </div>
+                <!-- Buttons -->
+                <div class="flex gap-3 pt-4 border-t border-gray-200">
+                    <button onclick="testConnection()" class="btn-primary flex-1 py-3 rounded-xl font-semibold">
+                        <i class="fas fa-plug ml-2"></i> اختبار الاتصال
+                    </button>
+                    <button onclick="closeSetupModal()" class="py-3 px-6 rounded-xl border-2 border-gray-300 text-gray-600 font-semibold hover:bg-gray-50">
+                        لاحقاً
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="glass sticky top-0 z-50 mb-6">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://www.image2url.com/r2/default/images/1777193694982-0955eb59-0903-4510-ac64-e437d393f4b2.jpg" 
+                     alt="شعار النادي" class="w-14 h-14 rounded-full object-cover border-2 border-gold shadow-lg animate-float">
+                <div>
+                    <h1 class="font-tajawal font-bold text-lg leading-tight text-primary">كراج نادي الفروسية المركزي</h1>
+                    <p class="text-xs text-muted">Central Equestrian Club Garage</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="connection-status" class="flex items-center gap-2 glass-card px-3 py-1.5 rounded-full cursor-pointer" onclick="openSetupModal()">
+                    <span id="conn-dot" class="connection-dot offline"></span>
+                    <span id="conn-text" class="text-sm font-semibold text-red-500">غير متصل</span>
+                </div>
+                <div class="hidden sm:flex items-center gap-2 glass-card px-3 py-1.5 rounded-full">
+                    <i class="fas fa-clock text-gold"></i>
+                    <span id="clock" class="text-sm font-semibold timer-live">--:--:--</span>
+                </div>
+                <div class="hidden sm:flex items-center gap-2 glass-card px-3 py-1.5 rounded-full">
+                    <i class="fas fa-calendar text-secondary"></i>
+                    <span id="date" class="text-sm">----/--/--</span>
+                </div>
+                <button onclick="toggleSound()" id="btn-sound-toggle" class="glass-card px-3 py-1.5 rounded-full hover:bg-white/90 transition-all" title="تشغيل/إيقاف الصوت">
+                    <i id="sound-icon" class="fas fa-volume-up text-gold text-sm"></i>
+                </button>
+                <button onclick="manualSync()" id="btn-sync" class="glass-card px-3 py-1.5 rounded-full hover:bg-white/90 transition-all" title="مزامنة الآن">
+                    <i id="sync-icon" class="fas fa-sync-alt text-gold text-sm"></i>
+                </button>
+            </div>
+        </div>
+        <div id="sync-progress" class="hidden">
+            <div class="h-0.5 bg-gray-200">
+                <div id="sync-progress-bar" class="h-full bg-gradient-to-r from-primary to-gold progress-bar" style="width:0%"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN ==================== -->
+    <main class="max-w-7xl mx-auto px-4 pb-8">
+
+        <!-- NAV TABS -->
+        <nav class="glass rounded-2xl mb-6 p-2 flex gap-1 overflow-x-auto">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active flex-1 min-w-[100px] py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm">
+                <i class="fas fa-chart-line"></i><span>الرئيسية</span>
+            </button>
+            <button onclick="switchTab('scan')" id="tab-scan" class="tab-btn flex-1 min-w-[100px] py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm">
+                <i class="fas fa-barcode"></i><span>مسح الباركود</span>
+            </button>
+            <button onclick="switchTab('active')" id="tab-active" class="tab-btn flex-1 min-w-[100px] py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm relative">
+                <i class="fas fa-car-side"></i><span>الجلسات النشطة</span>
+                <span id="active-badge" class="absolute -top-1 -left-1 w-5 h-5 bg-accent text-white text-[10px] rounded-full flex items-center justify-center hidden">0</span>
+            </button>
+            <button onclick="switchTab('history')" id="tab-history" class="tab-btn flex-1 min-w-[100px] py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm">
+                <i class="fas fa-history"></i><span>السجل</span>
+            </button>
+            <button onclick="switchTab('cloud')" id="tab-cloud" class="tab-btn flex-1 min-w-[100px] py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm">
+                <i class="fas fa-cloud"></i><span>السحابة</span>
+            </button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn flex-1 min-w-[100px] py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm">
+                <i class="fas fa-cog"></i><span>الإعدادات</span>
+            </button>
+        </nav>
+
+        <!-- ==================== DASHBOARD ==================== -->
+        <section id="dashboard" class="tab-content animate-fade-in">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="glass-card rounded-2xl p-5 stat-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"><i class="fas fa-car text-primary text-xl"></i></div>
+                        <span class="text-3xl font-bold text-primary font-tajawal" id="stat-cars">0</span>
+                    </div>
+                    <p class="text-sm text-textMuted">سيارات بالكراج</p>
+                    <div class="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="bar-cars" class="h-full bg-primary rounded-full progress-bar" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="glass-card rounded-2xl p-5 stat-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-gold/15 flex items-center justify-center"><i class="fas fa-coins text-gold text-xl"></i></div>
+                        <div class="text-left">
+                            <span class="text-xl font-bold text-gold font-tajawal block" id="stat-revenue-new">0</span>
+                            <span class="text-xs text-muted" id="stat-revenue-old">0 قديم</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-textMuted">إيرادات اليوم</p>
+                </div>
+                <div class="glass-card rounded-2xl p-5 stat-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center"><i class="fas fa-clipboard-list text-secondary text-xl"></i></div>
+                        <span class="text-3xl font-bold text-secondary font-tajawal" id="stat-sessions">0</span>
+                    </div>
+                    <p class="text-sm text-textMuted">جلسات اليوم</p>
+                </div>
+                <div class="glass-card rounded-2xl p-5 stat-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-muted/15 flex items-center justify-center"><i class="fas fa-id-card text-muted text-xl"></i></div>
+                        <span class="text-3xl font-bold text-muted font-tajawal" id="stat-available">50</span>
+                    </div>
+                    <p class="text-sm text-textMuted">بطاقات شاغرة</p>
+                    <div class="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="bar-available" class="h-full bg-muted rounded-full progress-bar" style="width:100%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6 mb-6">
+                <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-bolt text-gold"></i> إجراءات سريعة
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button onclick="switchTab('scan')" class="btn-primary py-4 px-6 rounded-xl flex flex-col items-center gap-2">
+                        <i class="fas fa-camera text-2xl"></i><span class="font-semibold">مسح باركود</span>
+                    </button>
+                    <button onclick="switchTab('active')" class="btn-secondary py-4 px-6 rounded-xl flex flex-col items-center gap-2">
+                        <i class="fas fa-list text-2xl"></i><span class="font-semibold">الجلسات النشطة</span>
+                    </button>
+                    <button onclick="exportToExcel()" class="py-4 px-6 rounded-xl flex flex-col items-center gap-2 bg-gradient-to-br from-green-600 to-green-700 text-white hover:shadow-lg transition-all">
+                        <i class="fas fa-file-excel text-2xl"></i><span class="font-semibold">تصدير Excel</span>
+                    </button>
+                    <button onclick="switchTab('cloud')" class="py-4 px-6 rounded-xl flex flex-col items-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-lg transition-all">
+                        <i class="fas fa-cloud text-2xl"></i><span class="font-semibold">إدارة السحابة</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass rounded-2xl p-6">
+                <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-calendar-day text-gold"></i> ملخص اليوم
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-primary/20">
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">البطاقة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">وقت الدخول</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">وقت الخروج</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">المدة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">السعر (جديد)</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">السعر (قديم)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="today-summary-body">
+                            <tr><td colspan="6" class="text-center py-8 text-textMuted">لا توجد جلسات اليوم</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SCAN ==================== -->
+        <section id="scan" class="tab-content hidden animate-fade-in">
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-camera text-gold animate-pulse-gold"></i> مسح الباركود بالكاميرا
+                    </h2>
+                    <div class="scan-frame rounded-2xl p-1 mb-4">
+                        <div id="scanner-container" class="rounded-xl overflow-hidden bg-black aspect-[4/3] relative">
+                            <div class="absolute inset-0 flex items-center justify-center text-white/50">
+                                <div class="text-center">
+                                    <i class="fas fa-camera text-4xl mb-2"></i>
+                                    <p class="text-sm">اضغط "تشغيل الكاميرا" للبدء</p>
+                                </div>
+                            </div>
+                            <div class="scan-line"></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="startScanner()" id="btn-start-scan" class="btn-primary flex-1 py-3 rounded-xl font-semibold">
+                            <i class="fas fa-play ml-2"></i> تشغيل الكاميرا
+                        </button>
+                        <button onclick="stopScanner()" id="btn-stop-scan" class="btn-accent flex-1 py-3 rounded-xl font-semibold hidden">
+                            <i class="fas fa-stop ml-2"></i> إيقاف
+                        </button>
+                        <button onclick="switchCamera()" id="btn-switch-camera" class="py-3 px-4 rounded-xl border border-gray-300 text-sm text-textMuted hover:bg-gray-50 hidden">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-3 mt-3">
+                        <button onclick="testCamera()" class="btn-secondary py-2 px-4 rounded-xl font-semibold text-sm">
+                            <i class="fas fa-camera ml-1"></i> اختبار الكاميرا
+                        </button>
+                        <button onclick="openConsole()" class="py-2 px-4 rounded-xl border border-gray-300 text-sm text-textMuted hover:bg-gray-50">
+                            <i class="fas fa-terminal ml-1"></i> فتح Console
+                        </button>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-keyboard text-gold"></i> إدخال يدوي
+                    </h2>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-textMuted mb-2">رقم البطاقة أو الباركود</label>
+                        <input type="text" id="manual-input" class="w-full px-4 py-3 rounded-xl border-2 border-secondary/30 focus:border-gold focus:outline-none bg-white/80 text-lg font-semibold text-center" placeholder="أدخل رقم البطاقة...">
+                    </div>
+                    <button onclick="processManualEntry()" class="btn-primary w-full py-3 rounded-xl font-semibold mb-4">
+                        <i class="fas fa-check ml-2"></i> تسجيل الدخول / الخروج
+                    </button>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="appendNum('1')" class="numpad-btn py-3 rounded-xl text-lg font-bold">1</button>
+                        <button onclick="appendNum('2')" class="numpad-btn py-3 rounded-xl text-lg font-bold">2</button>
+                        <button onclick="appendNum('3')" class="numpad-btn py-3 rounded-xl text-lg font-bold">3</button>
+                        <button onclick="appendNum('4')" class="numpad-btn py-3 rounded-xl text-lg font-bold">4</button>
+                        <button onclick="appendNum('5')" class="numpad-btn py-3 rounded-xl text-lg font-bold">5</button>
+                        <button onclick="appendNum('6')" class="numpad-btn py-3 rounded-xl text-lg font-bold">6</button>
+                        <button onclick="appendNum('7')" class="numpad-btn py-3 rounded-xl text-lg font-bold">7</button>
+                        <button onclick="appendNum('8')" class="numpad-btn py-3 rounded-xl text-lg font-bold">8</button>
+                        <button onclick="appendNum('9')" class="numpad-btn py-3 rounded-xl text-lg font-bold">9</button>
+                        <button onclick="clearNum()" class="numpad-btn py-3 rounded-xl text-lg font-bold bg-accent/10 text-accent"><i class="fas fa-backspace"></i></button>
+                        <button onclick="appendNum('0')" class="numpad-btn py-3 rounded-xl text-lg font-bold">0</button>
+                        <button onclick="clearAllNum()" class="numpad-btn py-3 rounded-xl text-lg font-bold bg-secondary/10 text-secondary"><i class="fas fa-eraser"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div id="scan-result" class="glass rounded-2xl p-6 mt-6 hidden">
+                <h3 class="text-lg font-bold text-primary mb-3">نتيجة آخر مسح</h3>
+                <div id="scan-result-content" class="text-center"></div>
+            </div>
+        </section>
+
+        <!-- ==================== ACTIVE SESSIONS ==================== -->
+        <section id="active" class="tab-content hidden animate-fade-in">
+            <div class="glass rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-primary flex items-center gap-2">
+                        <i class="fas fa-car text-gold animate-bounce-soft"></i> السيارات الموجودة حالياً
+                    </h2>
+                    <span class="glass-card px-4 py-2 rounded-full text-sm font-bold text-primary">
+                        <span id="active-count">0</span> سيارة
+                    </span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-primary/20">
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">البطاقة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">وقت الدخول</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">مدة البقاء</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">التكلفة المتوقعة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-sessions-body">
+                            <tr><td colspan="5" class="text-center py-8 text-textMuted">لا توجد سيارات بالكراج حالياً</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="glass rounded-2xl p-6">
+                <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-clock text-gold"></i> البطاقات في فترة التهدئة
+                </h2>
+                <div id="cooldown-grid" class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- ==================== HISTORY ==================== -->
+        <section id="history" class="tab-content hidden animate-fade-in">
+            <div class="glass rounded-2xl p-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                    <h2 class="text-lg font-bold text-primary flex items-center gap-2">
+                        <i class="fas fa-history text-gold"></i> سجل الجلسات
+                    </h2>
+                    <button onclick="exportToExcel()" class="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-all flex items-center gap-2">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                </div>
+                <div class="flex gap-4 mb-4 overflow-x-auto pb-2">
+                    <button onclick="filterHistory('all')"   id="filter-all"   class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white">الكل</button>
+                    <button onclick="filterHistory('today')" id="filter-today" class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-white/80 text-textMain">اليوم</button>
+                    <button onclick="filterHistory('week')"  id="filter-week"  class="filter-btn px-4 py-2 rounded-xl text-sm font-semibold bg-white/80 text-textMain">هذا الأسبوع</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-primary/20">
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">#</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">البطاقة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الدخول</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الخروج</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">المدة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">السعر (جديد)</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">السعر (قديم)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body">
+                            <tr><td colspan="7" class="text-center py-8 text-textMuted">لا توجد جلسات مسجلة</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== CLOUD ==================== -->
+        <section id="cloud" class="tab-content hidden animate-fade-in">
+            <div class="glass rounded-2xl p-6 mb-6">
+                <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-wifi text-gold"></i> حالة الاتصال
+                </h2>
+                <div id="cloud-status-card" class="flex items-center gap-4 p-4 rounded-xl bg-green-50 border border-green-200">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-check text-green-600 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-green-700">متصل بجوجل شيت</h3>
+                        <p class="text-sm text-textMuted">آخر مزامنة: <span id="last-sync-time">لم تتم بعد</span></p>
+                    </div>
+                    <button onclick="manualSync()" class="btn-primary px-4 py-2 rounded-xl text-sm font-semibold">
+                        <i class="fas fa-sync-alt ml-1"></i> مزامنة الآن
+                    </button>
+                </div>
+            </div>
+            <div class="glass rounded-2xl p-6 mb-6">
+                <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-cog text-gold"></i> إعدادات المزامنة التلقائية
+                </h2>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="glass-card rounded-xl p-4">
+                        <label class="flex items-center justify-between cursor-pointer">
+                            <span class="font-semibold text-sm">مزامنة تلقائية</span>
+                            <div class="relative">
+                                <input type="checkbox" id="auto-sync-toggle" class="sr-only peer" checked onchange="toggleAutoSync()">
+                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </div>
+                        </label>
+                        <p class="text-xs text-textMuted mt-2">مزامنة البيانات تلقائياً عند كل عملية تسجيل دخول/خروج</p>
+                    </div>
+                    <div class="glass-card rounded-xl p-4">
+                        <label class="block text-sm font-semibold text-textMuted mb-2">فاصل المزامنة (دقائق)</label>
+                        <select id="sync-interval" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-gold focus:outline-none" onchange="updateSyncInterval()">
+                            <option value="1">كل دقيقة</option>
+                            <option value="5" selected>كل 5 دقائق</option>
+                            <option value="15">كل 15 دقيقة</option>
+                            <option value="30">كل 30 دقيقة</option>
+                            <option value="0">إيقاف</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="glass rounded-2xl p-6">
+                <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-history text-gold"></i> سجل المزامنة
+                </h2>
+                <div id="sync-log" class="space-y-2 max-h-64 overflow-y-auto">
+                    <div class="text-center py-8 text-textMuted">
+                        <i class="fas fa-cloud-upload-alt text-4xl mb-2 text-muted"></i>
+                        <p class="text-sm">لا توجد عمليات مزامنة بعد</p>
+                    </div>
+                </div>
+                <button onclick="clearSyncLog()" class="mt-4 px-4 py-2 rounded-xl border border-gray-300 text-sm text-textMuted hover:bg-gray-50">
+                    <i class="fas fa-trash ml-1"></i> مسح السجل
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== SETTINGS ==================== -->
+        <section id="settings" class="tab-content hidden animate-fade-in">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="glass rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-coins text-gold"></i> إعدادات السعر
+                    </h2>
+                    <div>
+                        <label class="block text-sm font-semibold text-textMuted mb-2">السعر لكل ساعة (ليرة سورية جديدة)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="price-per-hour" value="100" min="1" class="flex-1 px-4 py-3 rounded-xl border-2 border-secondary/30 focus:border-gold focus:outline-none bg-white/80 text-lg font-semibold" onchange="updateSettings()">
+                            <span class="text-sm font-bold text-muted whitespace-nowrap">ل.س جديد</span>
+                        </div>
+                        <p class="text-xs text-muted mt-1">السعر بالقديم: <span id="price-old-display" class="font-bold text-secondary">10000</span> ل.س قديم</p>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6">
+                    <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-shield-alt text-gold"></i> الحماية الذكية
+                    </h2>
+                    <div>
+                        <label class="block text-sm font-semibold text-textMuted mb-2">فترة التهدئة (ثواني)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="range" id="cooldown-slider" min="5" max="60" value="30" class="flex-1 accent-primary" oninput="updateCooldownDisplay()">
+                            <span id="cooldown-display" class="text-lg font-bold text-primary w-12 text-center">30</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-2xl p-6 md:col-span-2">
+                    <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-id-card text-gold"></i> حالة البطاقات (50 بطاقة)
+                    </h2>
+                    <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-3" id="cards-grid"></div>
+                </div>
+                <div class="glass rounded-2xl p-6 md:col-span-2">
+                    <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                        <i class="fas fa-database text-gold"></i> إدارة البيانات
+                    </h2>
+                    <div class="grid sm:grid-cols-4 gap-4">
+                        <button onclick="openSetupModal()" class="glass-card py-4 px-6 rounded-xl flex flex-col items-center gap-2 hover:bg-blue-50">
+                            <i class="fas fa-cloud-upload-alt text-blue-600 text-2xl"></i>
+                            <span class="font-semibold text-sm">ربط جوجل شيت</span>
+                        </button>
+                        <button onclick="exportToJSON()" class="glass-card py-4 px-6 rounded-xl flex flex-col items-center gap-2 hover:bg-green-50">
+                            <i class="fas fa-download text-green-600 text-2xl"></i>
+                            <span class="font-semibold text-sm">تصدير JSON</span>
+                        </button>
+                        <label class="glass-card py-4 px-6 rounded-xl flex flex-col items-center gap-2 hover:bg-purple-50 cursor-pointer">
+                            <i class="fas fa-upload text-purple-600 text-2xl"></i>
+                            <span class="font-semibold text-sm">استيراد JSON</span>
+                            <input type="file" id="import-file" accept=".json" class="hidden" onchange="importFromJSON(this)">
+                        </label>
+                        <button onclick="showResetModal()" class="glass-card py-4 px-6 rounded-xl flex flex-col items-center gap-2 hover:bg-red-50">
+                            <i class="fas fa-trash-alt text-red-600 text-2xl"></i>
+                            <span class="font-semibold text-sm">إعادة تعيين</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== MY REVENUE (EMPLOYEE) ==================== -->
+        <section id="my-revenue" class="tab-content hidden animate-fade-in">
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="glass-card rounded-2xl p-5 stat-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-gold/15 flex items-center justify-center"><i class="fas fa-car text-gold text-xl"></i></div>
+                        <span class="text-3xl font-bold text-primary font-tajawal" id="emp-car-count">0</span>
+                    </div>
+                    <p class="text-sm text-textMuted">عدد السيارات المنهاة</p>
+                </div>
+                <div class="glass-card rounded-2xl p-5 stat-card">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-gold/15 flex items-center justify-center"><i class="fas fa-coins text-gold text-xl"></i></div>
+                        <span class="text-3xl font-bold text-gold font-tajawal" id="emp-revenue">0</span>
+                    </div>
+                    <p class="text-sm text-textMuted">إجمالي الإيرادات</p>
+                </div>
+            </div>
+            <div class="glass rounded-2xl p-6">
+                <h2 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                    <i class="fas fa-history text-gold"></i> آخر العمليات
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-primary/20">
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">البطاقة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الوقت</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">المدة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">المبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emp-operations-body">
+                            <tr><td colspan="4" class="text-center py-8 text-textMuted">لا توجد عمليات بعد</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ALL REVENUES (ACCOUNTANT) ==================== -->
+        <section id="all-revenues" class="tab-content hidden animate-fade-in">
+            <div class="glass rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-primary flex items-center gap-2">
+                        <i class="fas fa-chart-bar text-gold"></i> إيرادات الموظفين
+                    </h2>
+                    <button onclick="exportEmployeeRevenues()" class="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-all flex items-center gap-2">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-primary/20">
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">اسم الموظف</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الدور</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">عدد السيارات</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الإيراد الحالي</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="revenues-body">
+                            <tr><td colspan="5" class="text-center py-8 text-textMuted">جاري تحميل البيانات...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== EMPLOYEE MANAGEMENT (GENERAL MANAGER) ==================== -->
+        <section id="employees" class="tab-content hidden animate-fade-in">
+            <div class="glass rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-primary flex items-center gap-2">
+                        <i class="fas fa-users text-gold"></i> إدارة الموظفين
+                    </h2>
+                    <button onclick="openAddEmployeeModal()" class="px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primaryLight transition-all flex items-center gap-2">
+                        <i class="fas fa-plus"></i> إضافة موظف
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-primary/20">
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الاسم</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الهاتف</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الدور</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الحالة</th>
+                                <th class="text-right py-3 px-4 text-sm font-bold text-primary">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employees-body">
+                            <tr><td colspan="5" class="text-center py-8 text-textMuted">جاري تحميل الموظفين...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== ADD/EDIT EMPLOYEE MODAL ==================== -->
+    <div id="employee-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);">
+        <div class="glass rounded-2xl max-w-md w-full p-6 animate-fade-in shadow-2xl">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-user-plus text-primary text-2xl"></i>
+                </div>
+                <h3 id="employee-modal-title" class="text-xl font-bold text-white mb-2">إضافة موظف جديد</h3>
+            </div>
+            <form id="employee-form" class="space-y-4">
+                <div>
+                    <label class="block text-white/90 text-sm font-semibold mb-2">اسم الموظف</label>
+                    <input type="text" id="emp-name" placeholder="الاسم الكامل"
+                           class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-gold focus:outline-none focus:bg-white/15 transition-all text-right" required>
+                </div>
+                <div>
+                    <label class="block text-white/90 text-sm font-semibold mb-2">رقم الهاتف</label>
+                    <input type="tel" id="emp-phone" placeholder="+963 9..."
+                           class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-gold focus:outline-none focus:bg-white/15 transition-all text-right" required>
+                </div>
+                <div>
+                    <label class="block text-white/90 text-sm font-semibold mb-2">رمز المرور (PIN)</label>
+                    <input type="text" id="emp-pin" placeholder="6 أرقام" maxlength="6"
+                           class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-gold focus:outline-none focus:bg-white/15 transition-all text-right" required>
+                </div>
+                <div>
+                    <label class="block text-white/90 text-sm font-semibold mb-2">الدور</label>
+                    <select id="emp-role" class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white focus:border-gold focus:outline-none focus:bg-white/15 transition-all">
+                        <option value="employee">موظف عادي</option>
+                        <option value="accountant">محاسب</option>
+                        <option value="general_manager">مدير عام</option>
+                    </select>
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 py-3 rounded-lg bg-gradient-to-r from-gold to-secondary text-white font-bold hover:shadow-lg transition-all">
+                        <i class="fas fa-save ml-2"></i> حفظ
+                    </button>
+                    <button type="button" onclick="closeEmployeeModal()" class="flex-1 py-3 rounded-lg bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== SETTLE ACCOUNT MODAL ==================== -->
+    <div id="settle-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);">
+        <div class="glass rounded-2xl max-w-sm w-full p-6 animate-fade-in shadow-2xl">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-check-circle text-green-400 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">تصفية حساب الموظف</h3>
+                <p id="settle-emp-name" class="text-gray-300 text-sm mb-2"></p>
+                <p class="text-gold text-2xl font-bold"><span id="settle-amount">0</span> ل.س</p>
+            </div>
+            <p class="text-white/80 text-sm text-center mb-6">سيتم حفظ المبلغ في الأرشيف وإعادة تعيين الرصيد</p>
+            <div class="flex gap-3">
+                <button onclick="confirmSettleAccount()" class="flex-1 py-3 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-all">
+                    <i class="fas fa-check ml-2"></i> تأكيد التصفية
+                </button>
+                <button onclick="closeSettleModal()" class="flex-1 py-3 rounded-lg bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/20 transition-all">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== RECEIPT MODAL ==================== -->
+    <div id="receipt-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(45,80,22,0.3);backdrop-filter:blur(8px);">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full animate-fade-in shadow-2xl">
+            <div class="text-center mb-6">
+                <img src="https://www.image2url.com/r2/default/images/1777193694982-0955eb59-0903-4510-ac64-e437d393f4b2.jpg" alt="شعار النادي" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover border-3 border-gold">
+                <h2 class="text-xl font-bold text-primary font-tajawal">كراج نادي الفروسية المركزي</h2>
+                <p class="text-xs text-muted">إيصال دفع</p>
+            </div>
+            <div class="receipt rounded-xl p-4 mb-6 space-y-3">
+                <div class="flex justify-between"><span class="text-sm text-textMuted">رقم البطاقة:</span><span id="receipt-card" class="font-bold text-primary">--</span></div>
+                <div class="flex justify-between"><span class="text-sm text-textMuted">وقت الدخول:</span><span id="receipt-entry" class="font-bold">--</span></div>
+                <div class="flex justify-between"><span class="text-sm text-textMuted">وقت الخروج:</span><span id="receipt-exit" class="font-bold">--</span></div>
+                <div class="border-t border-dashed border-secondary/30 pt-3 flex justify-between">
+                    <span class="text-sm text-textMuted">عدد الساعات:</span>
+                    <span id="receipt-hours" class="font-bold text-primary">--</span>
+                </div>
+                <div class="border-t border-dashed border-secondary/30 pt-3 flex justify-between items-center">
+                    <span class="text-sm font-bold text-textMuted">المبلغ (جديد):</span>
+                    <span id="receipt-price-new" class="text-2xl font-bold text-gold">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-textMuted">المبلغ (قديم):</span>
+                    <span id="receipt-price-old" class="text-lg font-bold text-secondary">--</span>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeReceipt()" class="btn-primary flex-1 py-3 rounded-xl font-semibold">إغلاق</button>
+                <button onclick="printReceipt()" class="btn-secondary flex-1 py-3 rounded-xl font-semibold">
+                    <i class="fas fa-print ml-2"></i> طباعة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== RESET MODAL ==================== -->
+    <div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(45,80,22,0.3);backdrop-filter:blur(8px);">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full animate-fade-in shadow-2xl">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-red-600 mb-1">تأكيد إعادة التعيين</h3>
+                <p class="text-sm text-textMuted">سيتم حذف جميع البيانات ولا يمكن التراجع!</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeResetModal()" class="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-600 font-semibold hover:bg-gray-50">إلغاء</button>
+                <button onclick="confirmReset()" class="flex-1 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700">تأكيد الحذف</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST ==================== -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden">
+        <div class="glass-dark text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-slide-in">
+            <i id="toast-icon" class="fas fa-check-circle text-gold"></i>
+            <span id="toast-message" class="font-semibold">تم بنجاح</span>
+        </div>
+    </div>
+
+    <!-- ==================== APP SCRIPTS ==================== -->
+    <!-- IMPORTANT: cloud.js must load before app.js and state.js -->
+    <script src="js/users.js"></script>
+    <script src="js/cloud.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/employees-ui.js"></script>
+    <script>
+        // ==================== AUTH CHECK & INIT ====================
+        function checkAuthentication() {
+            const isAuthenticated = sessionStorage.getItem('is-authenticated');
+            const authToken = localStorage.getItem('auth-token');
+            
+            if (!isAuthenticated || !authToken) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Initialize user management and set up UI
+            initUserManagement();
+            updateUIVisibility();
+        }
+        
+        // التحقق عند تحميل الصفحة
+        window.addEventListener('load', checkAuthentication);
+        
+        // إضافة معلومات المستخدم وزر تسجيل الخروج
+        function addUserInfoAndLogout() {
+            const user = getCurrentUser();
+            if (!user) return;
+            
+            const headerRight = document.querySelector('header .flex.items-center.gap-3:first-child');
+            if (headerRight) {
+                // Add user info
+                const userInfo = document.createElement('div');
+                userInfo.className = 'hidden sm:flex items-center gap-2 glass-card px-3 py-1.5 rounded-full';
+                userInfo.innerHTML = `<i class="fas fa-user text-gold"></i><span class="text-sm">${user.name}</span>`;
+                headerRight.insertBefore(userInfo, headerRight.lastChild);
+            }
+            
+            const headerButtons = document.querySelector('header .flex.items-center.gap-3:last-child');
+            if (headerButtons) {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.className = 'glass-card px-3 py-1.5 rounded-full hover:bg-red-50 transition-all';
+                logoutBtn.title = 'تسجيل الخروج';
+                logoutBtn.onclick = logoutUser;
+                logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt text-red-600 text-sm"></i>';
+                headerButtons.appendChild(logoutBtn);
+            }
+        }
+        
+        function logoutUser() {
+            if (confirm('هل تريد تسجيل الخروج من النظام؟')) {
+                logout();
+                sessionStorage.clear();
+                localStorage.removeItem('auth-token');
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // إضافة معلومات المستخدم والخروج بعد تحميل DOM
+        document.addEventListener('DOMContentLoaded', addUserInfoAndLogout);
+    </script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(r => console.log('SW registered:', r.scope))
+                    .catch(e => console.log('SW registration failed:', e));
+            });
+        }
+    </script>
+</body>
+</html>

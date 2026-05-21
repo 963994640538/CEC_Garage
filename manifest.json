@@ -1,0 +1,22 @@
+{
+  "name": "كراج نادي الفروسية المركزي",
+  "short_name": "كراج الفروسية",
+  "description": "نظام إدارة كراج نادي الفروسية المركزي مع المزامنة السحابية",
+  "start_url": "/CEC_Garage/",
+  "scope": "/CEC_Garage/",
+  "display": "standalone",
+  "background_color": "#F5F1E8",
+  "theme_color": "#2D5016",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity"],
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
