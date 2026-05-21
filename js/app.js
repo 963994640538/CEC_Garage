@@ -4,21 +4,14 @@
 // ==================== INIT ====================
 
 async function init() {
-    // ✅ CHECK AUTHENTICATION FIRST
-    const isAuthenticated = sessionStorage.getItem('is-authenticated');
-    const authToken = localStorage.getItem('auth-token');
-    
-    if (!isAuthenticated || !authToken) {
-        console.warn('❌ User not authenticated, redirecting to login');
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // ✅ LOAD USER MANAGEMENT (before app logic)
+    // ✅ CHECK AUTHENTICATION — التحقق الحقيقي من المستخدم وليس مجرد flag
     loadUserManagement();
     const currentUserCheck = getCurrentUser();
+
     if (!currentUserCheck) {
-        console.error('❌ No current user found, redirecting to login');
+        // لا يوجد مستخدم في الجلسة — تنظيف وإعادة توجيه
+        console.warn('❌ No authenticated user found, redirecting to login');
+        sessionStorage.removeItem('cec_current_user');
         sessionStorage.removeItem('is-authenticated');
         localStorage.removeItem('auth-token');
         window.location.href = 'login.html';
@@ -160,7 +153,7 @@ async function processScan(barcode) {
 
         card.status     = 'active';
         card.lastUsed   = now.toISOString();
-        card.cooldownEnd = new Date(now.getTime() + settings.cooldownSeconds * 1000).toISOString();
+        // ✅ لا نضع cooldownEnd عند الدخول — التهدئة فقط للخروج
 
         playSaveSound();
         saveAllData();
@@ -460,14 +453,25 @@ async function forceExit(sessionId) {
     const card = cards.find(c => c.id === session.cardId);
     if (!card) return;
 
+    // ✅ تأكيد قبل الخروج القسري
+    if (!confirm(`هل تريد تسجيل خروج البطاقة #${card.number} قسراً؟`)) return;
+
     const now = new Date();
     session.exitTime = now.toISOString();
     session.status   = 'completed';
+
+    // ✅ تسجيل موظف الخروج القسري
+    session.exitEmployee  = getCurrentUser().id;
+    session.revenueOwner  = getCurrentUser().id;
+
     const diffMs     = now - new Date(session.entryTime);
     session.hours    = Math.ceil(diffMs / (1000 * 60 * 60) * 2) / 2;
     if (session.hours < 0.5) session.hours = 0.5;
     session.priceNew = session.hours * settings.pricePerHour;
     session.priceOld = session.priceNew * 100;
+
+    // ✅ إضافة الإيراد لحساب الموظف
+    addSessionRevenue(session);
 
     stats.todayRevenue  += session.priceNew;
     stats.todaySessions += 1;
@@ -558,15 +562,23 @@ function importFromJSON(input) {
 }
 
 function exportToExcel() {
-    const data = allSessions.map((s, i) => ({
-        'رقم': i + 1, 'رقم البطاقة': s.cardNumber,
-        'الحالة': s.status === 'active' ? 'نشطة' : 'مكتملة',
-        'وقت الدخول': formatDateTime(s.entryTime),
-        'وقت الخروج': s.exitTime ? formatDateTime(s.exitTime) : '-',
-        'عدد الساعات': s.hours || '-',
-        'السعر (ل.س جديد)': s.priceNew || '-',
-        'السعر (ل.س قديم)': s.priceOld || '-'
-    }));
+    const data = allSessions.map((s, i) => {
+        // ✅ إضافة أسماء موظفي الدخول والخروج في التصدير
+        const entryEmp = s.entryEmployee ? (getEmployee(s.entryEmployee)?.name || 'غير معروف') : '-';
+        const exitEmp  = s.exitEmployee  ? (getEmployee(s.exitEmployee)?.name  || 'غير معروف') : '-';
+        return {
+            'رقم': i + 1,
+            'رقم البطاقة': s.cardNumber,
+            'الحالة': s.status === 'active' ? 'نشطة' : 'مكتملة',
+            'وقت الدخول': formatDateTime(s.entryTime),
+            'موظف الدخول': entryEmp,
+            'وقت الخروج': s.exitTime ? formatDateTime(s.exitTime) : '-',
+            'موظف الخروج': exitEmp,
+            'عدد الساعات': s.hours || '-',
+            'السعر (ل.س جديد)': s.priceNew || '-',
+            'السعر (ل.س قديم)': s.priceOld || '-'
+        };
+    });
     if (data.length === 0) { showToast('لا توجد بيانات للتصدير', 'warning'); return; }
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();

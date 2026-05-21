@@ -124,9 +124,52 @@ function loadUserManagement() {
 
         // Always ensure default users are initialized
         initDefaultUsers();
+
+        // ✅ إعادة تعيين الإيرادات اليومية تلقائياً عند بداية يوم جديد
+        checkDailyRevenueReset();
     } catch (error) {
         console.error('❌ Error loading user management:', error);
         initDefaultUsers();
+    }
+}
+
+// ==================== DAILY REVENUE AUTO-RESET ====================
+
+function checkDailyRevenueReset() {
+    const today = new Date().toISOString().split('T')[0];
+    const lastResetDay = localStorage.getItem('cec_revenue_reset_day') || '';
+
+    if (lastResetDay !== today) {
+        console.log('🔄 يوم جديد — إعادة تعيين إيرادات الموظفين تلقائياً');
+
+        // أرشفة إيرادات الأمس قبل الحذف
+        employees.forEach(emp => {
+            const rev = employeeRevenues[emp.id];
+            if (rev && rev.todayRevenue > 0) {
+                revenueArchive.push({
+                    employeeId: emp.id,
+                    employeeName: emp.name,
+                    amount: rev.todayRevenue,
+                    carCount: rev.carCount,
+                    settledAt: (lastResetDay || today) + 'T23:59:59.000Z',
+                    autoReset: true
+                });
+            }
+        });
+
+        // تصفير الإيرادات لجميع الموظفين
+        employees.forEach(emp => {
+            employeeRevenues[emp.id] = {
+                todayRevenue: 0,
+                carCount: 0,
+                lastOperations: []
+            };
+        });
+
+        localStorage.setItem('cec_revenue_reset_day', today);
+        saveEmployeeRevenues();
+        saveRevenueArchive();
+        console.log('✅ تمت إعادة تعيين الإيرادات ليوم', today);
     }
 }
 
@@ -155,7 +198,7 @@ function initDefaultUsers() {
             },
             {
                 id: 3,
-                name: '',
+                name: 'محمد تركيه',
                 phone: '+963912345680',
                 pin: '333333',
                 role: USER_ROLES.EMPLOYEE,
