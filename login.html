@@ -352,9 +352,8 @@
                         localStorage.removeItem('remembered-user');
                     }
 
-                    // Save authentication status
-                    sessionStorage.setItem('is-authenticated', 'true');
-                    localStorage.setItem('auth-token', 'user-' + Date.now());
+                    // ✅ المصادقة الحقيقية تعتمد على currentUser في sessionStorage
+                    // لا حاجة لـ is-authenticated أو auth-token
 
                     setTimeout(() => {
                         window.location.href = 'index.html';
