@@ -9,7 +9,6 @@ async function init() {
     const currentUserCheck = getCurrentUser();
 
     if (!currentUserCheck) {
-        // لا يوجد مستخدم في الجلسة — تنظيف وإعادة توجيه
         console.warn('❌ No authenticated user found, redirecting to login');
         sessionStorage.removeItem('cec_current_user');
         sessionStorage.removeItem('is-authenticated');
@@ -53,15 +52,15 @@ function switchTab(tabId) {
     document.getElementById(tabId).classList.remove('hidden');
     document.getElementById('tab-' + tabId).classList.add('active');
 
-    if (tabId === 'active')    renderActiveSessions();
-    if (tabId === 'history')   renderHistory();
-    if (tabId === 'settings')  renderCardsGrid();
-    if (tabId === 'dashboard') renderDashboard();
-    if (tabId === 'cloud') { updateLastSyncDisplay(); renderSyncLog(); }
-    if (tabId === 'scan')  { document.getElementById('scan-result').classList.add('hidden'); }
-    if (tabId === 'my-revenue') renderMyRevenue();
+    if (tabId === 'active')       renderActiveSessions();
+    if (tabId === 'history')      renderHistory();
+    if (tabId === 'settings')     renderCardsGrid();
+    if (tabId === 'dashboard')    renderDashboard();
+    if (tabId === 'cloud')        { updateLastSyncDisplay(); renderSyncLog(); }
+    if (tabId === 'scan')         { document.getElementById('scan-result').classList.add('hidden'); }
+    if (tabId === 'my-revenue')   renderMyRevenue();
     if (tabId === 'all-revenues') renderAllRevenuesTable();
-    if (tabId === 'employees') renderEmployeesTable();
+    if (tabId === 'employees')    renderEmployeesTable();
 }
 
 // ==================== SCAN PROCESSING ====================
@@ -98,8 +97,8 @@ async function processScan(barcode) {
         const session = activeSession;
         session.exitTime = now.toISOString();
         session.status   = 'completed';
-        session.exitEmployee = getCurrentUser().id; // تسجيل موظف الخروج
-        session.revenueOwner = getCurrentUser().id;  // الإيراد للموظف الذي أنهى العملية
+        session.exitEmployee = getCurrentUser().id;
+        session.revenueOwner = getCurrentUser().id;
 
         const diffMs    = now - new Date(session.entryTime);
         const diffHours = diffMs / (1000 * 60 * 60);
@@ -109,22 +108,25 @@ async function processScan(barcode) {
         session.priceNew = session.hours * settings.pricePerHour;
         session.priceOld = session.priceNew * 100;
 
-        // تحديث إيرادات الموظف الذي أنهى العملية
         addSessionRevenue(session);
 
         stats.todayRevenue  += session.priceNew;
         stats.todaySessions += 1;
 
-        card.status     = 'cooldown';
-        card.lastUsed   = now.toISOString();
+        card.status      = 'cooldown';
+        card.lastUsed    = now.toISOString();
         card.cooldownEnd = new Date(now.getTime() + settings.cooldownSeconds * 1000).toISOString();
 
         activeSessions = activeSessions.filter(s => s.id !== session.id);
 
         saveAllData();
         await updateSessionInCloud(session.id, {
-            exitTime: session.exitTime, hours: session.hours,
-            priceNew: session.priceNew, priceOld: session.priceOld, status: 'completed'
+            exitTime:     session.exitTime,
+            hours:        session.hours,
+            priceNew:     session.priceNew,
+            priceOld:     session.priceOld,
+            status:       'completed',
+            exitEmployee: session.exitEmployee
         });
 
         playSaveSound();
@@ -143,7 +145,7 @@ async function processScan(barcode) {
             hours: 0, priceNew: 0, priceOld: 0,
             status: 'active',
             date: now.toISOString().split('T')[0],
-            entryEmployee: getCurrentUser().id, // تسجيل موظف الدخول
+            entryEmployee: getCurrentUser().id,
             exitEmployee: null,
             revenueOwner: null
         };
@@ -151,9 +153,8 @@ async function processScan(barcode) {
         allSessions.push(session);
         activeSessions.push(session);
 
-        card.status     = 'active';
-        card.lastUsed   = now.toISOString();
-        // ✅ لا نضع cooldownEnd عند الدخول — التهدئة فقط للخروج
+        card.status   = 'active';
+        card.lastUsed = now.toISOString();
 
         playSaveSound();
         saveAllData();
@@ -248,9 +249,7 @@ function clearAllNum()  { document.getElementById('manual-input').value = ''; }
 // ==================== RENDER ====================
 
 function renderAll() {
-    // Initialize user-based UI visibility
     initUserManagement();
-    
     renderDashboard();
     renderActiveSessions();
     renderHistory();
@@ -270,16 +269,17 @@ function renderDashboard() {
     document.getElementById('stat-available').textContent    = availableCount;
     document.getElementById('bar-available').style.width     = (availableCount / 50 * 100) + '%';
 
-    const today        = new Date().toISOString().split('T')[0];
+    const today         = new Date().toISOString().split('T')[0];
     const todaySessions = allSessions.filter(s => s.date === today && s.status === 'completed');
-    const tbody        = document.getElementById('today-summary-body');
+    const tbody         = document.getElementById('today-summary-body');
 
     if (todaySessions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-textMuted">لا توجد جلسات اليوم</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-textMuted">لا توجد جلسات اليوم</td></tr>';
     } else {
         tbody.innerHTML = todaySessions.slice(-10).reverse().map(s => `
             <tr class="border-b border-gray-100 session-row">
                 <td class="py-3 px-4 font-bold text-primary">#${s.cardNumber}</td>
+                <td class="py-3 px-4 text-sm text-textMuted">${formatDate(s.entryTime)}</td>
                 <td class="py-3 px-4 text-sm">${formatTime(s.entryTime)}</td>
                 <td class="py-3 px-4 text-sm">${formatTime(s.exitTime)}</td>
                 <td class="py-3 px-4 text-sm font-semibold">${s.hours} ساعة</td>
@@ -294,20 +294,21 @@ function renderActiveSessions() {
     document.getElementById('active-count').textContent = activeSessions.length;
 
     if (activeSessions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-textMuted">لا توجد سيارات بالكراج حالياً</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-textMuted">لا توجد سيارات بالكراج حالياً</td></tr>';
     } else {
         tbody.innerHTML = activeSessions.map(s => {
-            const entry      = new Date(s.entryTime);
-            const now        = new Date();
-            const diffMins   = Math.floor((now - entry) / 60000);
-            const diffHours  = Math.floor(diffMins / 60);
-            const mins       = diffMins % 60;
-            const timeStr    = diffHours > 0 ? `${diffHours}س ${mins}د` : `${mins}د`;
+            const entry     = new Date(s.entryTime);
+            const now       = new Date();
+            const diffMins  = Math.floor((now - entry) / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const mins      = diffMins % 60;
+            const timeStr   = diffHours > 0 ? `${diffHours}س ${mins}د` : `${mins}د`;
             const roundedHrs = Math.ceil((now - entry) / (1000 * 60 * 60) * 2) / 2;
-            const estPrice   = Math.max(roundedHrs, 0.5) * settings.pricePerHour;
+            const estPrice  = Math.max(roundedHrs, 0.5) * settings.pricePerHour;
             return `
                 <tr class="border-b border-gray-100 session-row">
                     <td class="py-3 px-4 font-bold text-primary">#${s.cardNumber}</td>
+                    <td class="py-3 px-4 text-sm text-textMuted">${formatDate(s.entryTime)}</td>
                     <td class="py-3 px-4 text-sm">${formatTime(s.entryTime)}</td>
                     <td class="py-3 px-4 text-sm font-semibold timer-live text-accent">${timeStr}</td>
                     <td class="py-3 px-4 text-sm font-bold text-gold">~${estPrice.toLocaleString()} ل.س</td>
@@ -337,8 +338,8 @@ function renderActiveSessions() {
 
 function updateLiveTimers() {
     renderActiveSessions();
-    const now     = new Date();
-    let changed   = false;
+    const now   = new Date();
+    let changed = false;
     cards.forEach(c => {
         if (c.cooldownEnd && now >= new Date(c.cooldownEnd)) {
             c.cooldownEnd = null;
@@ -362,14 +363,16 @@ function renderHistory(filter = 'all') {
 
     const tbody = document.getElementById('history-body');
     if (sessions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-textMuted">لا توجد جلسات</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-textMuted">لا توجد جلسات</td></tr>';
     } else {
         tbody.innerHTML = sessions.map((s, i) => `
             <tr class="border-b border-gray-100 session-row ${s.status === 'active' ? 'bg-green-50/50' : ''}">
                 <td class="py-3 px-4 text-sm text-muted">${sessions.length - i}</td>
                 <td class="py-3 px-4 font-bold text-primary">#${s.cardNumber}</td>
-                <td class="py-3 px-4 text-sm">${formatDateTime(s.entryTime)}</td>
-                <td class="py-3 px-4 text-sm">${s.exitTime ? formatDateTime(s.exitTime) : '<span class="text-green-600 font-semibold">نشطة</span>'}</td>
+                <td class="py-3 px-4 text-sm text-textMuted">${formatDate(s.entryTime)}</td>
+                <td class="py-3 px-4 text-sm">${formatTime(s.entryTime)}</td>
+                <td class="py-3 px-4 text-sm">${s.exitTime ? formatTime(s.exitTime) : '<span class="text-green-600 font-semibold">نشطة</span>'}</td>
+                <td class="py-3 px-4 text-sm text-textMuted">${getEmployeeName(s.entryEmployee)}</td>
                 <td class="py-3 px-4 text-sm font-semibold">${s.hours > 0 ? s.hours + ' ساعة' : '-'}</td>
                 <td class="py-3 px-4 text-sm font-bold text-gold">${s.priceNew > 0 ? s.priceNew.toLocaleString() : '-'}</td>
                 <td class="py-3 px-4 text-sm font-bold text-secondary">${s.priceOld > 0 ? s.priceOld.toLocaleString() : '-'}</td>
@@ -391,9 +394,9 @@ function renderCardsGrid() {
     const grid = document.getElementById('cards-grid');
     grid.innerHTML = cards.map(c => {
         let bgClass, icon;
-        if (c.status === 'available') { bgClass = 'bg-green-50 border-green-200 text-green-700'; icon = '<i class="fas fa-check text-xs"></i>'; }
-        else if (c.status === 'active') { bgClass = 'bg-red-50 border-red-200 text-red-700'; icon = '<i class="fas fa-car text-xs"></i>'; }
-        else { bgClass = 'bg-yellow-50 border-yellow-200 text-yellow-700'; icon = '<i class="fas fa-clock text-xs"></i>'; }
+        if (c.status === 'available')      { bgClass = 'bg-green-50 border-green-200 text-green-700'; icon = '<i class="fas fa-check text-xs"></i>'; }
+        else if (c.status === 'active')    { bgClass = 'bg-red-50 border-red-200 text-red-700'; icon = '<i class="fas fa-car text-xs"></i>'; }
+        else                               { bgClass = 'bg-yellow-50 border-yellow-200 text-yellow-700'; icon = '<i class="fas fa-clock text-xs"></i>'; }
         return `<div class="glass-card rounded-xl p-2 text-center ${bgClass} border cursor-pointer hover:scale-105 transition-transform" onclick="showCardInfo(${c.id})">
             <span class="text-xs font-bold block">#${c.number}</span>
             <span class="text-[10px] block mt-1">${icon}</span>
@@ -430,8 +433,8 @@ function showScanResult(card, type, extra = null) {
 function showReceipt(session, card) {
     currentReceipt = session;
     document.getElementById('receipt-card').textContent      = '#' + card.number;
-    document.getElementById('receipt-entry').textContent     = formatDateTime(session.entryTime);
-    document.getElementById('receipt-exit').textContent      = formatDateTime(session.exitTime);
+    document.getElementById('receipt-entry').textContent     = formatDate(session.entryTime) + ' ' + formatTime(session.entryTime);
+    document.getElementById('receipt-exit').textContent      = formatDate(session.exitTime)  + ' ' + formatTime(session.exitTime);
     document.getElementById('receipt-hours').textContent     = session.hours + ' ساعة';
     document.getElementById('receipt-price-new').textContent = session.priceNew.toLocaleString() + ' ل.س';
     document.getElementById('receipt-price-old').textContent = session.priceOld.toLocaleString() + ' ل.س';
@@ -453,16 +456,13 @@ async function forceExit(sessionId) {
     const card = cards.find(c => c.id === session.cardId);
     if (!card) return;
 
-    // ✅ تأكيد قبل الخروج القسري
     if (!confirm(`هل تريد تسجيل خروج البطاقة #${card.number} قسراً؟`)) return;
 
     const now = new Date();
-    session.exitTime = now.toISOString();
-    session.status   = 'completed';
-
-    // ✅ تسجيل موظف الخروج القسري
-    session.exitEmployee  = getCurrentUser().id;
-    session.revenueOwner  = getCurrentUser().id;
+    session.exitTime     = now.toISOString();
+    session.status       = 'completed';
+    session.exitEmployee = getCurrentUser().id;
+    session.revenueOwner = getCurrentUser().id;
 
     const diffMs     = now - new Date(session.entryTime);
     session.hours    = Math.ceil(diffMs / (1000 * 60 * 60) * 2) / 2;
@@ -470,7 +470,6 @@ async function forceExit(sessionId) {
     session.priceNew = session.hours * settings.pricePerHour;
     session.priceOld = session.priceNew * 100;
 
-    // ✅ إضافة الإيراد لحساب الموظف
     addSessionRevenue(session);
 
     stats.todayRevenue  += session.priceNew;
@@ -484,8 +483,12 @@ async function forceExit(sessionId) {
     playSaveSound();
     saveAllData();
     await updateSessionInCloud(session.id, {
-        exitTime: session.exitTime, hours: session.hours,
-        priceNew: session.priceNew, priceOld: session.priceOld, status: 'completed'
+        exitTime:     session.exitTime,
+        hours:        session.hours,
+        priceNew:     session.priceNew,
+        priceOld:     session.priceOld,
+        status:       'completed',
+        exitEmployee: session.exitEmployee
     });
     showReceipt(session, card);
     renderAll();
@@ -497,7 +500,7 @@ async function forceExit(sessionId) {
 function updateSettings() {
     const price    = parseInt(document.getElementById('price-per-hour').value) || 100;
     const cooldown = parseInt(document.getElementById('cooldown-slider').value) || 30;
-    settings.pricePerHour   = price;
+    settings.pricePerHour    = price;
     settings.cooldownSeconds = cooldown;
     saveSettings();
     updatePriceOldDisplay();
@@ -519,10 +522,10 @@ function showCardInfo(cardId) {
     const card = cards.find(c => c.id === cardId);
     if (!card) return;
     let msg = `بطاقة #${card.number}\nالحالة: `;
-    if (card.status === 'available')  msg += 'متاحة';
+    if (card.status === 'available')   msg += 'متاحة';
     else if (card.status === 'active') msg += 'نشطة (بالكراج)';
-    else msg += 'فترة تهدئة';
-    if (card.lastUsed) msg += `\nآخر استخدام: ${formatDateTime(card.lastUsed)}`;
+    else                               msg += 'فترة تهدئة';
+    if (card.lastUsed) msg += `\nآخر استخدام: ${formatDate(card.lastUsed)} ${formatTime(card.lastUsed)}`;
     showToast(msg, 'success');
 }
 
@@ -562,23 +565,19 @@ function importFromJSON(input) {
 }
 
 function exportToExcel() {
-    const data = allSessions.map((s, i) => {
-        // ✅ إضافة أسماء موظفي الدخول والخروج في التصدير
-        const entryEmp = s.entryEmployee ? (getEmployee(s.entryEmployee)?.name || 'غير معروف') : '-';
-        const exitEmp  = s.exitEmployee  ? (getEmployee(s.exitEmployee)?.name  || 'غير معروف') : '-';
-        return {
-            'رقم': i + 1,
-            'رقم البطاقة': s.cardNumber,
-            'الحالة': s.status === 'active' ? 'نشطة' : 'مكتملة',
-            'وقت الدخول': formatDateTime(s.entryTime),
-            'موظف الدخول': entryEmp,
-            'وقت الخروج': s.exitTime ? formatDateTime(s.exitTime) : '-',
-            'موظف الخروج': exitEmp,
-            'عدد الساعات': s.hours || '-',
-            'السعر (ل.س جديد)': s.priceNew || '-',
-            'السعر (ل.س قديم)': s.priceOld || '-'
-        };
-    });
+    const data = allSessions.map((s, i) => ({
+        'رقم':                i + 1,
+        'رقم البطاقة':        s.cardNumber,
+        'الحالة':             s.status === 'active' ? 'نشطة' : 'مكتملة',
+        'تاريخ الدخول':       formatDate(s.entryTime),
+        'وقت الدخول':         formatTime(s.entryTime),
+        'موظف الدخول':        getEmployeeName(s.entryEmployee),
+        'وقت الخروج':         s.exitTime ? formatTime(s.exitTime) : '-',
+        'موظف الخروج':        getEmployeeName(s.exitEmployee),
+        'عدد الساعات':        s.hours || '-',
+        'السعر (ل.س جديد)':   s.priceNew || '-',
+        'السعر (ل.س قديم)':   s.priceOld || '-'
+    }));
     if (data.length === 0) { showToast('لا توجد بيانات للتصدير', 'warning'); return; }
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -589,14 +588,34 @@ function exportToExcel() {
 
 // ==================== UTILITIES ====================
 
-function formatTime(iso) {
+/**
+ * يرجع التاريخ فقط بدون الوقت
+ * مثال: ٢٢/٠٥/٢٠٢٦
+ */
+function formatDate(iso) {
     if (!iso) return '-';
-    return new Date(iso).toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return new Date(iso).toLocaleDateString('ar-SY', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+    });
 }
 
+/**
+ * يرجع الوقت فقط بدون التاريخ
+ * مثال: ١٤:٣٥:٢٢
+ */
+function formatTime(iso) {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleTimeString('ar-SY', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+}
+
+/**
+ * يرجع التاريخ والوقت معاً — يُستخدم في الإيصال فقط
+ */
 function formatDateTime(iso) {
     if (!iso) return '-';
-    return new Date(iso).toLocaleString('ar-SY', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    return `${formatDate(iso)} ${formatTime(iso)}`;
 }
 
 function playAudio(id) {
@@ -606,7 +625,7 @@ function playAudio(id) {
 }
 
 function playClickSound() { playAudio('sound-click'); }
-function playSaveSound()  { playAudio('sound-save'); }
+function playSaveSound()  { playAudio('sound-save');  }
 
 function toggleSound() {
     soundEnabled = !soundEnabled;
@@ -644,7 +663,5 @@ function showToast(message, type = 'success') {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && document.activeElement.id === 'manual-input') processManualEntry();
 });
-
-// openSetupModal, closeSetupModal, testConnection, copyWebAppUrl — defined in cloud.js
 
 document.addEventListener('DOMContentLoaded', init);

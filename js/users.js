@@ -349,6 +349,18 @@ function getAllEmployees() {
     return employees;
 }
 
+// ==================== EMPLOYEE NAME HELPER ====================
+
+/**
+ * يرجع اسم الموظف بناءً على الـ ID
+ * لو الموظف محذوف يرجع "موظف #ID" بدل ما يكسر
+ */
+function getEmployeeName(employeeId) {
+    if (!employeeId) return '—';
+    const emp = employees.find(e => e.id === employeeId);
+    return emp ? emp.name : `موظف #${employeeId}`;
+}
+
 // ==================== REVENUE TRACKING ====================
 
 function addSessionRevenue(session) {
